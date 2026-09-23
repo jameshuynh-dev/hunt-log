@@ -12,16 +12,14 @@ Hunt Log keeps my internship search organized in one place: every company and ro
 
 I was tracking my internship search across my various notes and email.
 
-I also built it on purpose to **learn a professional, enterprise-style stack end to end**: a C# ASP.NET Core Web API with controllers, Entity Framework Core with migrations, a relational database, and a typed React front end. 
+I also built it on purpose to learn C# ASP.NET Core Web API with controllers, Entity Framework Core with migrations, a relational database, and a typed React front end. 
 
 ## Features
 
 - **Track applications:** company, role, status, date applied, deadline, follow-up date, and notes
 - **Dashboard:** stat cards with counts by status (click one to filter the table)
 - **Follow up today:** a panel listing every application whose follow-up date is today or overdue, most overdue first
-- **Full CRUD:** add, edit (including a one-click inline status change), and delete with a confirmation step
 - **Contacts:** record the recruiters and engineers I meet, linked to a specific application
-- **Validation on both sides:** HTML form rules in the browser, plus data annotations enforced by the API
 
 | Application detail with contacts | Editing an application |
 | --- | --- |
@@ -39,94 +37,6 @@ I also built it on purpose to **learn a professional, enterprise-style stack end
 | Data access | Entity Framework Core 9 (code-first, migrations) |
 | Database | SQLite (local file), designed to swap to SQL Server |
 | API docs / testing | Swagger UI (Swashbuckle) and a VS Code `.http` file |
-
-## Architecture
-
-```
-┌──────────────────────────── Browser: http://localhost:5180 ────────────────────────────┐
-│  React + TypeScript (Vite)                                                             │
-│                                                                                        │
-│   App.tsx (state) ──► Header · StatCards · FollowUpPanel · ApplicationTable            │
-│        │              ApplicationDetail · ContactForm · Modal · ConfirmDialog          │
-│        ▼                                                                               │
-│   api.ts  (every fetch() call lives here, typed with types.ts)                         │
-└────────┬───────────────────────────────────────────────────────────────────────────────┘
-         │  JSON over HTTP (REST)      GET / POST / PUT / DELETE
-         │  CORS: API only allows the origin http://localhost:5180
-         ▼
-┌──────────────────────────── ASP.NET Core Web API: http://localhost:5041 ───────────────┐
-│  Program.cs: dependency injection setup · CORS · Swagger · auto-migrate on startup      │
-│                                                                                        │
-│   ApplicationsController   /api/applications[/{id}]                                    │
-│   ContactsController       /api/applications/{id}/contacts,  /api/contacts/{id}        │
-│        │   (DTOs + [ApiController] validation → 400 on bad input)                      │
-│        ▼                                                                               │
-│   HuntLogDbContext (EF Core)  ── LINQ is translated to SQL ──┐                          │
-└──────────────────────────────────────────────────────────────┼─────────────────────────┘
-                                                               ▼
-                                       SQLite: api/huntlog.db  (or SQL Server)
-                                       Applications 1 ──< Contacts
-```
-
-### Data model
-
-```
-Applications                              Contacts
-─────────────────────────                 ─────────────────────────────
-Id            PK                    ┌───< Id              PK
-Company       text (100)            │     Name            text (100)
-Role          text (100)            │     Title           text, optional
-Status        text: Saved | Applied │     Email           text, optional
-              | Interviewing        │     LinkedIn        text, optional
-              | Offer | Rejected    │     Notes           text, optional
-DateApplied   date, optional        └──── ApplicationId   FK → Applications.Id
-Deadline      date, optional                              (cascade delete, indexed)
-FollowUpDate  date, optional
-Notes         text, optional
-CreatedAt     UTC timestamp
-```
-
-### REST API
-
-| Method | Route | Description | Success |
-| --- | --- | --- | --- |
-| GET | `/api/applications` | List all applications (newest first) | 200 |
-| GET | `/api/applications/{id}` | Get one application | 200 / 404 |
-| POST | `/api/applications` | Create an application | 201 + `Location` |
-| PUT | `/api/applications/{id}` | Replace an application | 200 / 404 |
-| DELETE | `/api/applications/{id}` | Delete an application and its contacts | 204 / 404 |
-| GET | `/api/applications/{id}/contacts` | List contacts for an application | 200 / 404 |
-| POST | `/api/applications/{id}/contacts` | Add a contact to an application | 201 / 404 |
-| GET | `/api/contacts/{id}` | Get one contact | 200 / 404 |
-| DELETE | `/api/contacts/{id}` | Delete a contact | 204 / 404 |
-
-Invalid input (for example a missing company or a malformed email) returns **400** with ASP.NET's standard `ProblemDetails` JSON, and the UI displays that message.
-
-### Project structure
-
-```
-hunt-log/
-├── api/                          ASP.NET Core Web API
-│   ├── Controllers/              ApplicationsController, ContactsController
-│   ├── Data/HuntLogDbContext.cs  EF Core context + table mapping
-│   ├── Dtos/                     Input shapes the client may send (prevents over-posting)
-│   ├── Migrations/               Generated schema history (InitialCreate, AddContacts)
-│   ├── Models/                   Application, ApplicationStatus, Contact
-│   ├── Program.cs                Startup: DI, CORS, Swagger, migrations
-│   ├── appsettings.json          Connection string + allowed client origin
-│   └── HuntLog.Api.http          Ready-made requests for every endpoint
-├── client/                       React + TypeScript (Vite)
-│   └── src/
-│       ├── api.ts                Typed fetch wrapper for every endpoint
-│       ├── types.ts              TypeScript types mirroring the C# models
-│       ├── dashboard.ts          Pure functions: counts by status, follow-ups due
-│       ├── dates.ts              Time-zone-safe date helpers
-│       ├── styles.ts             Shared Tailwind class strings
-│       ├── index.css             Tailwind theme: every color in one place
-│       ├── App.tsx               Top-level state and view switching
-│       └── components/           UI components
-└── docs/screenshots/
-```
 
 ## Running it locally
 
@@ -161,28 +71,4 @@ dotnet ef migrations add <DescriptiveName> --project api
 
 The new migration is applied the next time the API starts.
 
-## Switching from SQLite to SQL Server
 
-The database provider is chosen in one place, `Program.cs`. Models, the DbContext, and controllers don't know which database they're talking to.
-
-1. `dotnet add api package Microsoft.EntityFrameworkCore.SqlServer`
-2. In `Program.cs`, change `options.UseSqlite(...)` to `options.UseSqlServer(...)`
-3. In `appsettings.json`, set `ConnectionStrings:HuntLog` to a SQL Server connection string, e.g. `Server=localhost;Database=HuntLog;Trusted_Connection=True;TrustServerCertificate=True`
-4. Delete `api/Migrations/` and run `dotnet ef migrations add InitialCreate --project api`. Migrations contain provider-specific SQL, so they are regenerated for SQL Server.
-
-## Design decisions
-
-- **Controllers over minimal APIs:** this mirrors how larger ASP.NET codebases are usually organized, with one class per resource.
-- **DTOs for input:** clients send `ApplicationInput` / `ContactInput`, never the entity itself, so they can't overwrite server-owned fields like `Id` or `CreatedAt`.
-- **Enums stored as text:** the database shows `"Interviewing"` instead of `2`, and reordering the enum can't corrupt existing rows.
-- **`DateOnly` for calendar dates:** deadlines and follow-ups are days, not moments, so there's no time-zone drift. The front end compares `YYYY-MM-DD` strings directly.
-- **Derived state in React:** stat counts and the follow-up list are computed from the application list on every render, never stored separately, so they can't drift out of sync.
-- **Strict CORS:** the API allows only the front end's origin, not `*`.
-
-## Next steps
-
-- **Authentication:** add ASP.NET Core Identity or Google OAuth so each user sees only their own applications (add a `UserId` foreign key and `[Authorize]` on the controllers).
-- **Migrate to SQL Server:** follow the steps above, then deploy to a hosted SQL Server / Azure SQL instance.
-- **Kanban board view:** drag application cards between status columns (Saved → Applied → Interviewing → Offer), using the existing `PUT` endpoint to save the new status.
-- Automated tests: xUnit + an in-memory SQLite database for the controllers, Vitest for `dashboard.ts` and `dates.ts`.
-- Edit contacts in place, and search/sort in the applications table.
