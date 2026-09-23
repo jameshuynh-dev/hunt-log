@@ -8,11 +8,11 @@ Hunt Log keeps my internship search organized in one place: every company and ro
 
 ---
 
-## Why I built it
+## Why this was built
 
-I was tracking my internship search across a spreadsheet, sticky notes, and my inbox, and follow-ups kept slipping through the cracks. I built Hunt Log to fix that for myself.
+I was tracking my internship search across my various notes and email.
 
-I also built it on purpose to **learn a professional, enterprise-style stack end to end**: a C# ASP.NET Core Web API with controllers, Entity Framework Core with migrations, a relational database, and a typed React front end. I can explain every layer of this project, from the HTTP request in the browser down to the SQL table.
+I also built it on purpose to **learn a professional, enterprise-style stack end to end**: a C# ASP.NET Core Web API with controllers, Entity Framework Core with migrations, a relational database, and a typed React front end. 
 
 ## Features
 
