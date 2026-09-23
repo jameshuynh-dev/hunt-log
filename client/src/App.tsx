@@ -3,8 +3,15 @@ import { api } from './api'
 import { ApplicationForm } from './components/ApplicationForm'
 import { ApplicationTable } from './components/ApplicationTable'
 import { ConfirmDialog } from './components/ConfirmDialog'
+import { FollowUpPanel } from './components/FollowUpPanel'
+import { Header } from './components/Header'
 import { Modal } from './components/Modal'
-import { toInput, type Application, type ApplicationInput, type ApplicationStatus } from './types'
+import { StatCards, type StatusFilter } from './components/StatCards'
+import { countByStatus, dueForFollowUp } from './dashboard'
+import { todayIso } from './dates'
+import { STATUSES, toInput, type Application, type ApplicationInput, type ApplicationStatus } from './types'
+
+const FILTERS: StatusFilter[] = ['All', ...STATUSES]
 
 // App owns the list of applications (the "state"). Child components receive
 // data through props and report user actions back through callback props.
@@ -14,8 +21,10 @@ export default function App() {
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
+  const [filter, setFilter] = useState<StatusFilter>('All')
 
-  // Which application is open in the edit / delete dialogs (null = closed).
+  // Which dialog is open (false/null = closed).
+  const [adding, setAdding] = useState(false)
   const [editing, setEditing] = useState<Application | null>(null)
   const [deleting, setDeleting] = useState<Application | null>(null)
 
@@ -28,6 +37,13 @@ export default function App() {
       .finally(() => setLoading(false))
   }, [])
 
+  // DERIVED data: computed from `applications` on every render instead of
+  // stored in its own state, so it can never be out of sync with the list.
+  const today = todayIso()
+  const counts = countByStatus(applications)
+  const due = dueForFollowUp(applications, today)
+  const visible = filter === 'All' ? applications : applications.filter((a) => a.status === filter)
+
   // Swap one updated item into the list. We build a NEW array (map) instead
   // of mutating the old one, so React notices the change and re-renders.
   function replaceInList(updated: Application) {
@@ -37,6 +53,7 @@ export default function App() {
   async function handleCreate(input: ApplicationInput) {
     const created = await api.createApplication(input)
     setApplications((prev) => [created, ...prev])
+    setAdding(false)
   }
 
   async function handleUpdate(id: number, input: ApplicationInput) {
@@ -67,35 +84,68 @@ export default function App() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 px-4 py-8">
-      <header>
-        <h1 className="text-2xl font-bold text-primary">Hunt Log</h1>
-        <p className="text-sm text-muted">Internship application tracker</p>
-      </header>
+    <div className="min-h-screen">
+      <Header onAddClick={() => setAdding(true)} />
 
-      <section className="rounded-2xl bg-white p-6 shadow-sm">
-        <h2 className="mb-4 text-lg font-semibold text-primary">Add an application</h2>
-        <ApplicationForm submitLabel="Add application" onSubmit={handleCreate} />
-      </section>
-
-      {actionError && (
-        <p className="rounded-xl bg-rejected-bg px-4 py-3 text-sm text-rejected-text">{actionError}</p>
-      )}
-
-      <section className="rounded-2xl bg-white p-2 shadow-sm">
-        {loading && <p className="py-10 text-center text-sm text-muted">Loading…</p>}
-        {loadError && <p className="py-10 text-center text-sm text-rejected-text">{loadError}</p>}
-        {!loading && !loadError && (
-          <ApplicationTable
-            applications={applications}
-            onStatusChange={handleStatusChange}
-            onEdit={setEditing}
-            onDelete={setDeleting}
-          />
+      <main className="mx-auto max-w-6xl space-y-8 px-4 py-8">
+        {loading && <p className="py-16 text-center text-sm text-muted">Loading…</p>}
+        {loadError && (
+          <p className="rounded-2xl bg-rejected-bg px-4 py-3 text-sm text-rejected-text">{loadError}</p>
         )}
-      </section>
+
+        {!loading && !loadError && (
+          <>
+            <StatCards total={applications.length} counts={counts} active={filter} onSelect={setFilter} />
+
+            <FollowUpPanel due={due} today={today} onOpen={setEditing} />
+
+            {actionError && (
+              <p className="rounded-2xl bg-rejected-bg px-4 py-3 text-sm text-rejected-text">{actionError}</p>
+            )}
+
+            <section className="rounded-3xl bg-white p-4 shadow-[0_1px_3px_rgba(14,90,107,0.08)] sm:p-6">
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-3 px-2">
+                <h2 className="text-lg font-semibold text-primary">Applications</h2>
+                {/* Filter nav. The active item uses the purple accent. */}
+                <nav aria-label="Filter by status" className="flex flex-wrap gap-1 rounded-2xl bg-canvas p-1 sm:rounded-full">
+                  {FILTERS.map((f) => (
+                    <button
+                      key={f}
+                      type="button"
+                      onClick={() => setFilter(f)}
+                      aria-current={filter === f ? 'page' : undefined}
+                      className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
+                        filter === f ? 'bg-accent text-white shadow-sm' : 'text-muted hover:text-primary'
+                      }`}
+                    >
+                      {f}
+                    </button>
+                  ))}
+                </nav>
+              </div>
+              <ApplicationTable
+                applications={visible}
+                emptyMessage={
+                  applications.length === 0
+                    ? 'No applications yet. Click "+ Add application" to log your first one.'
+                    : `No applications with status "${filter}".`
+                }
+                onStatusChange={handleStatusChange}
+                onEdit={setEditing}
+                onDelete={setDeleting}
+              />
+            </section>
+          </>
+        )}
+      </main>
 
       {/* Dialogs render only while open. "key" gives each application a fresh form. */}
+      {adding && (
+        <Modal title="Add an application" onClose={() => setAdding(false)}>
+          <ApplicationForm submitLabel="Add application" onSubmit={handleCreate} onCancel={() => setAdding(false)} />
+        </Modal>
+      )}
+
       {editing && (
         <Modal title={`Edit ${editing.company}`} onClose={() => setEditing(null)}>
           <ApplicationForm

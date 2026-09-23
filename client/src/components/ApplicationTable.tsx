@@ -4,6 +4,7 @@ import { BADGE_CLASSES } from '../styles'
 
 interface ApplicationTableProps {
   applications: Application[]
+  emptyMessage: string
   onStatusChange: (app: Application, status: ApplicationStatus) => void
   onEdit: (app: Application) => void
   onDelete: (app: Application) => void
@@ -11,9 +12,9 @@ interface ApplicationTableProps {
 
 // A "presentational" component: it displays the data it's given (props) and
 // reports clicks back up through callbacks. It never calls the API itself.
-export function ApplicationTable({ applications, onStatusChange, onEdit, onDelete }: ApplicationTableProps) {
+export function ApplicationTable({ applications, emptyMessage, onStatusChange, onEdit, onDelete }: ApplicationTableProps) {
   if (applications.length === 0) {
-    return <p className="py-10 text-center text-sm text-muted">No applications yet. Add your first one above.</p>
+    return <p className="py-12 text-center text-sm text-muted">{emptyMessage}</p>
   }
 
   return (
@@ -33,7 +34,7 @@ export function ApplicationTable({ applications, onStatusChange, onEdit, onDelet
         <tbody>
           {/* key helps React match rows between renders, so it only updates what changed */}
           {applications.map((app) => (
-            <tr key={app.id} className="border-b border-line last:border-0">
+            <tr key={app.id} className="border-b border-line transition last:border-0 hover:bg-canvas/60">
               <td className="px-4 py-3 font-semibold text-primary">{app.company}</td>
               <td className="px-4 py-3">{app.role}</td>
               <td className="px-4 py-3">
