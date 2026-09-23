@@ -45,4 +45,10 @@ export const api = {
 
   createApplication: (input: ApplicationInput) =>
     request<Application>('/api/applications', jsonBody('POST', input)),
+
+  // PUT replaces the whole record, so always send every field.
+  updateApplication: (id: number, input: ApplicationInput) =>
+    request<Application>(`/api/applications/${id}`, jsonBody('PUT', input)),
+
+  deleteApplication: (id: number) => request<void>(`/api/applications/${id}`, { method: 'DELETE' }),
 }

@@ -21,3 +21,16 @@ export interface Application {
 // What we send on create/update: same as Application minus server-owned
 // fields. Matches ApplicationInput.cs on the backend.
 export type ApplicationInput = Omit<Application, 'id' | 'createdAt'>
+
+// Copy the editable fields out of an Application. Used for PUT, which needs the full object.
+export function toInput(app: Application): ApplicationInput {
+  return {
+    company: app.company,
+    role: app.role,
+    status: app.status,
+    dateApplied: app.dateApplied,
+    deadline: app.deadline,
+    followUpDate: app.followUpDate,
+    notes: app.notes,
+  }
+}

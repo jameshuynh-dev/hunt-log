@@ -1,4 +1,5 @@
 import { useState, type FormEvent, type ReactNode } from 'react'
+import { inputClass, primaryButtonClass, secondaryButtonClass } from '../styles'
 import { STATUSES, type ApplicationInput, type ApplicationStatus } from '../types'
 
 const EMPTY_FORM: ApplicationInput = {
@@ -129,16 +130,7 @@ export function ApplicationForm({ initialValues, submitLabel, onSubmit, onCancel
   )
 }
 
-// ----- Small building blocks and shared styles -----
-
-export const inputClass =
-  'w-full rounded-xl border border-line bg-white px-3 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:border-action focus:ring-2 focus:ring-action/20 focus:outline-none'
-
-export const primaryButtonClass =
-  'rounded-full bg-action px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-action-hover disabled:opacity-60'
-
-export const secondaryButtonClass =
-  'rounded-full border border-line bg-white px-5 py-2 text-sm font-semibold text-muted transition hover:bg-canvas'
+// ----- Small building blocks -----
 
 export function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
