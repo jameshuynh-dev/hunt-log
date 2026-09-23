@@ -5,6 +5,7 @@ import { BADGE_CLASSES } from '../styles'
 interface ApplicationTableProps {
   applications: Application[]
   emptyMessage: string
+  onOpen: (app: Application) => void
   onStatusChange: (app: Application, status: ApplicationStatus) => void
   onEdit: (app: Application) => void
   onDelete: (app: Application) => void
@@ -12,7 +13,7 @@ interface ApplicationTableProps {
 
 // A "presentational" component: it displays the data it's given (props) and
 // reports clicks back up through callbacks. It never calls the API itself.
-export function ApplicationTable({ applications, emptyMessage, onStatusChange, onEdit, onDelete }: ApplicationTableProps) {
+export function ApplicationTable({ applications, emptyMessage, onOpen, onStatusChange, onEdit, onDelete }: ApplicationTableProps) {
   if (applications.length === 0) {
     return <p className="py-12 text-center text-sm text-muted">{emptyMessage}</p>
   }
@@ -35,7 +36,16 @@ export function ApplicationTable({ applications, emptyMessage, onStatusChange, o
           {/* key helps React match rows between renders, so it only updates what changed */}
           {applications.map((app) => (
             <tr key={app.id} className="border-b border-line transition last:border-0 hover:bg-canvas/60">
-              <td className="px-4 py-3 font-semibold text-primary">{app.company}</td>
+              <td className="px-4 py-3">
+                {/* Company name opens the detail view (with contacts) */}
+                <button
+                  type="button"
+                  onClick={() => onOpen(app)}
+                  className="text-left font-semibold text-primary hover:text-action hover:underline"
+                >
+                  {app.company}
+                </button>
+              </td>
               <td className="px-4 py-3">{app.role}</td>
               <td className="px-4 py-3">
                 {/* A dropdown styled like the status pill: quick status change without opening the form */}

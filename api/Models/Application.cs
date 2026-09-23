@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace HuntLog.Api.Models;
 
 // An "entity": EF Core maps this class to the Applications table.
@@ -23,4 +25,10 @@ public class Application
 
     // Set by the server, never by the client. Stored in UTC.
     public DateTime CreatedAt { get; set; }
+
+    // Navigation property for the "many" side of the relationship. It is NOT a
+    // column: the link lives in Contact.ApplicationId. Contacts are fetched from
+    // their own endpoint, so we leave them out of Application JSON.
+    [JsonIgnore]
+    public List<Contact> Contacts { get; set; } = new();
 }

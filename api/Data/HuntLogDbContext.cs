@@ -19,6 +19,7 @@ public class HuntLogDbContext : DbContext
 
     // Each DbSet<T> is a table.
     public DbSet<Application> Applications => Set<Application>();
+    public DbSet<Contact> Contacts => Set<Contact>();
 
     // Fine-tune how classes map to tables (the "Fluent API").
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -40,6 +41,26 @@ public class HuntLogDbContext : DbContext
             entity.Property(a => a.CreatedAt).HasConversion(
                 toDb => toDb,
                 fromDb => DateTime.SpecifyKind(fromDb, DateTimeKind.Utc));
+        });
+
+        modelBuilder.Entity<Contact>(entity =>
+        {
+            entity.Property(c => c.Name).HasMaxLength(100).IsRequired();
+            entity.Property(c => c.Title).HasMaxLength(100);
+            entity.Property(c => c.Email).HasMaxLength(200);
+            entity.Property(c => c.LinkedIn).HasMaxLength(300);
+            entity.Property(c => c.Notes).HasMaxLength(2000);
+
+            // The one-to-many relationship, spelled out. EF would infer most of
+            // this from the property names, but writing it down makes it clear:
+            //   each Contact has one Application, each Application has many Contacts,
+            //   joined on Contact.ApplicationId.
+            // Cascade: deleting an Application also deletes its Contacts, so no
+            // "orphan" contacts are left pointing at a row that no longer exists.
+            entity.HasOne(c => c.Application)
+                  .WithMany(a => a.Contacts)
+                  .HasForeignKey(c => c.ApplicationId)
+                  .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

@@ -54,3 +54,26 @@ Content-Type: application/json
 
 ### Not found check -> expect 404
 GET {{baseUrl}}/9999
+
+### ----- Contacts (nested under an application) -----
+
+### List contacts for application 1
+GET http://localhost:5041/api/applications/1/contacts
+
+### Add a contact to application 1
+POST http://localhost:5041/api/applications/1/contacts
+Content-Type: application/json
+
+{
+  "name": "Jordan Lee",
+  "title": "Campus Recruiter",
+  "email": "jordan.lee@example.com",
+  "linkedIn": "linkedin.com/in/jordanlee",
+  "notes": "Met at the career fair booth."
+}
+
+### Get one contact
+GET http://localhost:5041/api/contacts/1
+
+### Delete a contact
+DELETE http://localhost:5041/api/contacts/1

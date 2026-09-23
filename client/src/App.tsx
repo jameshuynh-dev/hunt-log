@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api } from './api'
+import { ApplicationDetail } from './components/ApplicationDetail'
 import { ApplicationForm } from './components/ApplicationForm'
 import { ApplicationTable } from './components/ApplicationTable'
 import { ConfirmDialog } from './components/ConfirmDialog'
@@ -23,6 +24,11 @@ export default function App() {
   const [actionError, setActionError] = useState<string | null>(null)
   const [filter, setFilter] = useState<StatusFilter>('All')
 
+  // Which application's detail view is showing (null = dashboard).
+  // A tiny app doesn't need a router library: one piece of state picks the view.
+  // We store only the id and look up the object, so edits show up immediately.
+  const [selectedId, setSelectedId] = useState<number | null>(null)
+
   // Which dialog is open (false/null = closed).
   const [adding, setAdding] = useState(false)
   const [editing, setEditing] = useState<Application | null>(null)
@@ -43,6 +49,12 @@ export default function App() {
   const counts = countByStatus(applications)
   const due = dueForFollowUp(applications, today)
   const visible = filter === 'All' ? applications : applications.filter((a) => a.status === filter)
+  const selected = applications.find((a) => a.id === selectedId) ?? null
+
+  function openDetail(app: Application) {
+    setSelectedId(app.id)
+    window.scrollTo({ top: 0 })
+  }
 
   // Swap one updated item into the list. We build a NEW array (map) instead
   // of mutating the old one, so React notices the change and re-renders.
@@ -93,11 +105,15 @@ export default function App() {
           <p className="rounded-2xl bg-rejected-bg px-4 py-3 text-sm text-rejected-text">{loadError}</p>
         )}
 
-        {!loading && !loadError && (
+        {!loading && !loadError && selected && (
+          <ApplicationDetail key={selected.id} application={selected} onBack={() => setSelectedId(null)} onEdit={setEditing} />
+        )}
+
+        {!loading && !loadError && !selected && (
           <>
             <StatCards total={applications.length} counts={counts} active={filter} onSelect={setFilter} />
 
-            <FollowUpPanel due={due} today={today} onOpen={setEditing} />
+            <FollowUpPanel due={due} today={today} onOpen={openDetail} />
 
             {actionError && (
               <p className="rounded-2xl bg-rejected-bg px-4 py-3 text-sm text-rejected-text">{actionError}</p>
@@ -130,6 +146,7 @@ export default function App() {
                     ? 'No applications yet. Click "+ Add application" to log your first one.'
                     : `No applications with status "${filter}".`
                 }
+                onOpen={openDetail}
                 onStatusChange={handleStatusChange}
                 onEdit={setEditing}
                 onDelete={setDeleting}
@@ -161,7 +178,7 @@ export default function App() {
       {deleting && (
         <ConfirmDialog
           title="Delete application?"
-          message={`This permanently removes ${deleting.role} at ${deleting.company}. This can't be undone.`}
+          message={`This permanently removes ${deleting.role} at ${deleting.company}, along with its contacts. This can't be undone.`}
           confirmLabel="Delete"
           onConfirm={() => handleDelete(deleting)}
           onCancel={() => setDeleting(null)}

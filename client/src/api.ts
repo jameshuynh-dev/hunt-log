@@ -1,4 +1,4 @@
-import type { Application, ApplicationInput } from './types'
+import type { Application, ApplicationInput, Contact, ContactInput } from './types'
 
 // All HTTP calls live in this one file, so components never build URLs
 // themselves. If the API moves, change it here (or set VITE_API_URL in client/.env).
@@ -51,4 +51,12 @@ export const api = {
     request<Application>(`/api/applications/${id}`, jsonBody('PUT', input)),
 
   deleteApplication: (id: number) => request<void>(`/api/applications/${id}`, { method: 'DELETE' }),
+
+  // Contacts are nested under their application in the URL.
+  getContacts: (applicationId: number) => request<Contact[]>(`/api/applications/${applicationId}/contacts`),
+
+  createContact: (applicationId: number, input: ContactInput) =>
+    request<Contact>(`/api/applications/${applicationId}/contacts`, jsonBody('POST', input)),
+
+  deleteContact: (id: number) => request<void>(`/api/contacts/${id}`, { method: 'DELETE' }),
 }

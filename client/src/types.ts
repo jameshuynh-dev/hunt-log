@@ -22,6 +22,20 @@ export interface Application {
 // fields. Matches ApplicationInput.cs on the backend.
 export type ApplicationInput = Omit<Application, 'id' | 'createdAt'>
 
+// Matches Contact.cs. applicationId is the foreign key to Application.id.
+export interface Contact {
+  id: number
+  name: string
+  title: string | null
+  email: string | null
+  linkedIn: string | null
+  notes: string | null
+  applicationId: number
+}
+
+// Matches ContactInput.cs (applicationId goes in the URL, not the body).
+export type ContactInput = Omit<Contact, 'id' | 'applicationId'>
+
 // Copy the editable fields out of an Application. Used for PUT, which needs the full object.
 export function toInput(app: Application): ApplicationInput {
   return {

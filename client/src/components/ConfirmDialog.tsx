@@ -37,7 +37,7 @@ export function ConfirmDialog({ title, message, confirmLabel, onConfirm, onCance
           onClick={handleConfirm}
           className={dangerButtonClass}
         >
-          {working ? 'Deleting…' : confirmLabel}
+          {working ? 'Please wait…' : confirmLabel}
         </button>
       </div>
     </Modal>
