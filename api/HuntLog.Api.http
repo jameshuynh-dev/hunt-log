@@ -1,0 +1,56 @@
+# Test the API from VS Code.
+# 1. Install the "REST Client" extension (by Huachao Mao).
+# 2. Start the API:  dotnet run --project api
+# 3. Click "Send Request" above any request below.
+# Requests are separated by ###.
+
+@baseUrl = http://localhost:5041/api/applications
+
+### List all applications
+GET {{baseUrl}}
+
+### Create an application
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "company": "Acme Insurance",
+  "role": "Software Engineering Intern",
+  "status": "Applied",
+  "dateApplied": "2026-09-20",
+  "deadline": "2026-10-15",
+  "followUpDate": "2026-09-27",
+  "notes": "Met the recruiter at the career fair."
+}
+
+### Get one application by id
+GET {{baseUrl}}/1
+
+### Update an application (PUT sends the full object)
+PUT {{baseUrl}}/1
+Content-Type: application/json
+
+{
+  "company": "Acme Insurance",
+  "role": "Software Engineering Intern",
+  "status": "Interviewing",
+  "dateApplied": "2026-09-20",
+  "deadline": "2026-10-15",
+  "followUpDate": "2026-10-01",
+  "notes": "Phone screen scheduled."
+}
+
+### Delete an application
+DELETE {{baseUrl}}/1
+
+### Validation check: missing Company -> expect 400 Bad Request
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "role": "Intern",
+  "status": "Saved"
+}
+
+### Not found check -> expect 404
+GET {{baseUrl}}/9999
