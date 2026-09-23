@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+/*
+  THE THEME: every color and font the app uses is defined here, in one place.
+  Tailwind v4 reads this @theme block and generates utility classes from it:
+    --color-primary  ->  text-primary, bg-primary, border-primary, ...
+  To re-skin the app, change these values. No component needs to change.
+*/
+@theme {
+  --font-sans: "Open Sans", ui-sans-serif, system-ui, sans-serif;
+
+  /* Brand */
+  --color-primary: #0e5a6b;       /* deep cyan: headers, key text */
+  --color-action: #0891b2;        /* brighter cyan: buttons, links */
+  --color-action-hover: #0e7490;
+  --color-accent: #7c5cd6;        /* purple: highlights, active nav, follow-up panel */
+  --color-accent-soft: #f1edfb;
+
+  /* Surfaces and text */
+  --color-canvas: #f4f8f9;        /* page background */
+  --color-line: #e3ecee;          /* borders and dividers */
+  --color-muted: #6b7c85;         /* secondary text */
+
+  /* Status badges (soft background + readable text) */
+  --color-saved-bg: #eef1f3;
+  --color-saved-text: #56656e;
+  --color-applied-bg: #e3f4f8;
+  --color-applied-text: #0b6b83;
+  --color-interviewing-bg: #efeafb;
+  --color-interviewing-text: #6245bf;
+  --color-offer-bg: #e5f5ec;
+  --color-offer-text: #23794b;
+  --color-rejected-bg: #f8eaea;
+  --color-rejected-text: #a14a4a;
+}
+
+body {
+  background-color: var(--color-canvas);
+  color: #334148;
+}

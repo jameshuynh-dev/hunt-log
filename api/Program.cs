@@ -24,6 +24,19 @@ builder.Services
 builder.Services.AddDbContext<HuntLogDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("HuntLog")));
 
+// CORS (Cross-Origin Resource Sharing). The React dev server runs on
+// http://localhost:5180 and the API on http://localhost:5041. Different ports
+// count as different "origins", and browsers block cross-origin requests
+// unless the SERVER says they're allowed. This policy allows our client only,
+// rather than "*" (any website). The origin is read from appsettings.json.
+const string ClientCorsPolicy = "ClientDevServer";
+var clientOrigin = builder.Configuration["Cors:ClientOrigin"] ?? "http://localhost:5180";
+builder.Services.AddCors(options =>
+    options.AddPolicy(ClientCorsPolicy, policy =>
+        policy.WithOrigins(clientOrigin)
+              .AllowAnyHeader()
+              .AllowAnyMethod()));
+
 // Swagger generates an interactive web page that documents and tests the API.
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -51,6 +64,8 @@ if (app.Environment.IsDevelopment())
 
 // No UseHttpsRedirection / UseAuthorization: the app runs on http://localhost
 // only and has no login (auth is listed as a "next step" in the README).
+
+app.UseCors(ClientCorsPolicy); // must run before the controllers handle the request
 
 app.MapControllers(); // route requests to our [ApiController] classes
 
